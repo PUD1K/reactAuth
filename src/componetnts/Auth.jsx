@@ -54,7 +54,10 @@ export const Auth = function() {
         let user = {
             email: email,
             password: null,
-            H: null
+            H: null,
+            B: null,
+            a: null,
+            p: null
         }
         if(!email || !password){
             alert(`Не введено имя пользователя или пароль`)
@@ -62,6 +65,18 @@ export const Auth = function() {
             // отправляем на сервер логин
             axios.post(`http://localhost:7000/auth/login1`, user)
             .then((response) => {
+                const b = getRandomInt(99) + 1;
+
+                const A = response.data.A;
+                const a = response.data.a;
+                const g = response.data.g;
+                const p = response.data.p;
+                const B = Math.pow(g, b)%p
+
+                user.B = B;
+                user.a = a;
+                user.p = p;
+
                 // получаем H
                 console.log(response.data.H);
                 const passwordHash = MD5(password).toString();
@@ -69,22 +84,41 @@ export const Auth = function() {
                 const H = MD5(hHash+passwordHash).toString();
                 user.H = H;
 
+                console.log(passwordHash);
+                console.log(hHash);
+                console.log(H);
+
                 // отправляем на сервер захешированный H
                 axios.post(`http://localhost:7000/auth/login2`, user)
                 .then((response) =>{
-                    alert(`Вы успешно авторизовались!`)
+                    const K = Math.pow(A, b)%p
+                    alert(`Вы успешно авторизовались!\nK сервера = ${response.data.K}\nK клиента = ${K}`)
                 })
                 .catch((err) => {
-                    const errorMessage = JSON.parse(err.request.response).message
-                    alert(errorMessage)
+                    if(!!err?.request?.respnose){
+                        const errorMessage = JSON.parse(err.request.response).message
+                        alert(errorMessage)
+                    }
+                    else{
+                        console.log(err);
+                    }
                 })
 
             })
             .catch((err) => {
-                const errorMessage = JSON.parse(err.request.response).message
-                alert(errorMessage)
+                if(!!err?.request?.respnose){
+                    const errorMessage = JSON.parse(err.request.response).message
+                    alert(errorMessage)
+                }
+                else{
+                    console.log(err);
+                }
             })
         }
+    }
+
+    const getRandomInt = (max) =>{
+        return Math.floor(Math.random() * max);
     }
 
     return (
